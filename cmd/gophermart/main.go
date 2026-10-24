@@ -59,7 +59,7 @@ func main() {
 	LoyaltyService := service.NewLoyaltyService(userRepo, ordersRepo, withdrawalRepo, cfg.AccrualSystemAddress)
 	h2 := handler.New(LoyaltyService)
 
-	ticker := time.NewTicker(200 * time.Second)
+	ticker := time.NewTicker(61 * time.Second)
 	defer ticker.Stop()
 	go workers.Run(ctx, LoyaltyService, cfg.AccrualSystemAddress, ticker)
 
@@ -79,8 +79,23 @@ func main() {
 		r.Get("/api/user/withdrawals", h2.GetWithdrawals)
 	})
 
-	err = http.ListenAndServe(cfg.Address, r)
-	if err != nil {
+	srv := &http.Server{
+		Addr:    cfg.Address,
+		Handler: r,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	<-ctx.Done()
+	stop()
+
+	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelShutdown()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Fatal(err)
 	}
 }
