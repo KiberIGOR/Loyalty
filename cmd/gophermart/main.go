@@ -27,8 +27,8 @@ import (
 )
 
 func main() {
-ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-defer stop()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	cfg := config.Parse()
 
@@ -56,13 +56,13 @@ defer stop()
 
 	ordersRepo := repository.NewOrderRepo(pool)
 	withdrawalRepo := repository.NewWithdrawalRepo(pool)
-	LoyaltyService := service.NewLoyaltyService(userRepo,ordersRepo,withdrawalRepo,cfg.AccrualSystemAddress)
+	LoyaltyService := service.NewLoyaltyService(userRepo, ordersRepo, withdrawalRepo, cfg.AccrualSystemAddress)
 	h2 := handler.New(LoyaltyService)
 
-	ticker := time.NewTicker(20*time.Second)
+	ticker := time.NewTicker(200 * time.Second)
 	defer ticker.Stop()
 	go workers.Run(ctx, LoyaltyService, cfg.AccrualSystemAddress, ticker)
-	
+
 	r := chi.NewRouter()
 	r.Use(logger.RequestLogger)
 	r.Use(compress.GzipMiddleware)

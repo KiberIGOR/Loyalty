@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/KiberIGOR/Loyalty/internal/model"
 	"github.com/jackc/pgx/v5"
@@ -11,8 +12,9 @@ import (
 )
 
 var (
-	ErrConflict = errors.New("conflict")
-	ErrNotFound = errors.New("not found")
+	ErrConflict          = errors.New("conflict")
+	ErrNotFound          = errors.New("not found")
+	ErrInsufficientFunds = errors.New("insufficient funds")
 )
 
 const uniqueViolation = "23505"
@@ -56,10 +58,51 @@ func (r *UserRepo) GetByLogin(ctx context.Context, login string) (*model.User, e
 	return &user, nil
 }
 
-func (r *UserRepo) GetBalance(ctx context.Context, userID int) (int64, error) {
-
+func (r *UserRepo) GetBalance(ctx context.Context, userID int) (float64, error) {
+	var balance float64
+	err := r.pool.QueryRow(ctx,
+		`SELECT balance FROM users WHERE id = $1`,
+		userID,
+	).Scan(&balance)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, ErrNotFound
+		}
+		return 0, err
+	}
+	return balance, nil
 }
 
-func (r *UserRepo) ReduceBalance(ctx context.Context, orderNumber string, sum int64, userID int) error {
-	
+func (r *UserRepo) ReduceBalance(ctx context.Context, orderNumber string, sum float64, userID int) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	tag, err := tx.Exec(ctx,
+		`UPDATE users SET balance = balance - $1 WHERE id = $2 AND balance >= $1`,
+		sum, userID,
+	)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrInsufficientFunds
+	}
+
+	_, err = tx.Exec(ctx,
+		`INSERT INTO withdrawals (order_number, sum, processed_at, user_id)
+		 VALUES ($1, $2, $3, $4)`,
+		orderNumber, sum, time.Now(), userID,
+	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == uniqueViolation {
+			return ErrConflict
+		}
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

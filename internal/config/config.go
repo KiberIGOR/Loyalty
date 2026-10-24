@@ -16,9 +16,10 @@ type Config struct {
 func Parse() *Config {
 	cfg := &Config{}
 	flag.StringVar(&cfg.Address, "a", "localhost:8080", "address and port for redirect url")
-	ps := fmt.Sprintf("postgres://%s:%s@localhost:5432/loyalty?sslmode=disable", "loyalty", "loyalty")
-	flag.StringVar(&cfg.DataBaseDSN, "d", ps, "dsn string for database setting")
-	flag.StringVar(&cfg.AccrualSystemAddress, "r", "localhost:8081", "Address of api charge calculation system")
+	// ps := fmt.Sprintf("postgres://%s:%s@localhost:5432/loyalty?sslmode=disable", "loyalty", "loyalty")
+	flag.StringVar(&cfg.DataBaseDSN, "d", "", "dsn string for database setting")
+	//localhost:8081
+	flag.StringVar(&cfg.AccrualSystemAddress, "r", "", "Address of api charge calculation system")
 	flag.StringVar(&cfg.SecretKey, "k", "J83YbUemqzZBG1iJoNz8", "Secret Key for JWT")
 	flag.Parse()
 
@@ -31,7 +32,7 @@ func Parse() *Config {
 	}
 
 	if envRunAddr := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); envRunAddr != "" {
-		cfg.DataBaseDSN = envRunAddr
+		cfg.AccrualSystemAddress = envRunAddr
 	}
 
 	return cfg

@@ -24,10 +24,10 @@ type UserRepository interface {
 	Create(ctx context.Context, login, passwordHash string) (int, error)
 	//GetByLogin получение данных для авторизации
 	GetByLogin(ctx context.Context, login string) (*model.User, error)
-	//GetBalance возвращает баланс накопленных балов пользователя 
-	GetBalance(ctx context.Context, userID int) (int64, error)
+	//GetBalance возвращает баланс накопленных балов пользователя
+	GetBalance(ctx context.Context, userID int) (float64, error)
 	//ReduceBalance транзакция уменьшает баланс и записывает информацию о списании
-	ReduceBalance(ctx context.Context, orderNumber string, sum int64, userID int) error
+	ReduceBalance(ctx context.Context, orderNumber string, sum float64, userID int) error
 }
 
 type AuthService struct {

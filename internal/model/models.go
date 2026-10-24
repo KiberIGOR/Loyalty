@@ -16,41 +16,41 @@ type User struct {
 }
 
 type OrderResponce struct {
-	Number     string `json:"number"`
-	Status     string `json:"status"`
-	Accrual    int64  `json:"accrual"`
-	UploadedAt string `json:"uploaded_at"`
+	Number     string  `json:"number"`
+	Status     string  `json:"status"`
+	Accrual    float64 `json:"accrual,omitempty"`
+	UploadedAt string  `json:"uploaded_at"`
 }
 type BalanceResponce struct {
-	Current   int64 `json:"current"`
-	Withdrawn int64 `json:"withdrawn"`
+	Current   float64 `json:"current"`
+	Withdrawn float64 `json:"withdrawn"`
 }
 
 type ReduceBalanceRequest struct {
-	Order string `json:"order"`
-	Sum   int64  `json:"sum"`
+	Order string  `json:"order"`
+	Sum   float64 `json:"sum"`
 }
 type WithdrawalsResponce struct {
-	Order       string `json:"order"`
-	Sum         int64  `json:"sum"`
-	ProcessedAt string `json:"processed_at"`
+	Order       string  `json:"order"`
+	Sum         float64 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"`
 }
 type AccrualSystemResponce struct {
-	Order   string `json:"order"`
-	Status  string `json:"status"`
-	Accrual int64  `json:"accrual"`
+	Order   string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
 }
 
 type Order struct {
 	Number     string
 	Status     string
-	Accrual    int64
+	Accrual    float64
 	UploadedAt time.Time
 	UserID     int64
 }
 
 type Withdrawal struct {
 	Order       string
-	Sum         int64
+	Sum         float64
 	ProcessedAt time.Time
 }

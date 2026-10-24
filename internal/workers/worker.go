@@ -17,39 +17,39 @@ var errTooManyRequests = errors.New("too many requests to accrual system")
 
 type LoyaltyService interface {
 	GetProcessedOrders(ctx context.Context) ([]model.Order, error)
-	UpdateOrder(ctx context.Context, res model.AccrualSystemResponce, userID int64)  error
+	UpdateOrder(ctx context.Context, res model.AccrualSystemResponce, userID int64) error
 }
 
 func Run(ctx context.Context, loyalty LoyaltyService, address string, ticker *time.Ticker) {
-    for {
-        select {
-        case <-ctx.Done():
-            return
-        case <-ticker.C:
-            process(ctx, loyalty, address)
-        }
-    }
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			process(ctx, loyalty, address)
+		}
+	}
 }
 
 func process(ctx context.Context, loyalty LoyaltyService, address string) {
-    tickCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
-    defer cancel()
-    orders, err := loyalty.GetProcessedOrders(tickCtx)
-    if err != nil {
-        return
-    }
-    for _, order := range orders {
-        if tickCtx.Err() != nil {
-            return
-        }
-        res, err := sendRequestToAccrualSystem(tickCtx, address, order.Number)
-        if err != nil {
-            continue
-        }
-        if res.Status != order.Status && res.Status != "REGISTERED" {
-            _ = loyalty.UpdateOrder(tickCtx, res, order.UserID)
-        }
-    }
+	tickCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	orders, err := loyalty.GetProcessedOrders(tickCtx)
+	if err != nil {
+		return
+	}
+	for _, order := range orders {
+		if tickCtx.Err() != nil {
+			return
+		}
+		res, err := sendRequestToAccrualSystem(tickCtx, address, order.Number)
+		if err != nil {
+			continue
+		}
+		if res.Status != order.Status && res.Status != "REGISTERED" {
+			_ = loyalty.UpdateOrder(tickCtx, res, order.UserID)
+		}
+	}
 }
 
 func sendRequestToAccrualSystem(ctx context.Context, address string, orderNumber string) (model.AccrualSystemResponce, error) {
