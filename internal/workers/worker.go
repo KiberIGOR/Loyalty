@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/KiberIGOR/Loyalty/internal/model"
@@ -21,6 +22,7 @@ type LoyaltyService interface {
 }
 
 func Run(ctx context.Context, loyalty LoyaltyService, address string, ticker *time.Ticker) {
+	process(ctx, loyalty, address)
 	for {
 		select {
 		case <-ctx.Done():
@@ -32,7 +34,7 @@ func Run(ctx context.Context, loyalty LoyaltyService, address string, ticker *ti
 }
 
 func process(ctx context.Context, loyalty LoyaltyService, address string) {
-	tickCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	tickCtx, cancel := context.WithTimeout(ctx, 70*time.Second)
 	defer cancel()
 	orders, err := loyalty.GetProcessedOrders(tickCtx)
 	if err != nil {
@@ -71,7 +73,7 @@ func sendRequestToAccrualSystem(ctx context.Context, address string, orderNumber
 			return time.Duration(sec) * time.Second, nil
 		})
 
-	url := fmt.Sprintf("http://%s/api/orders/%s", address, orderNumber)
+	url := accrualOrderURL(address, orderNumber)
 
 	resp, err := client.R().SetContext(ctx).SetResult(&out).Get(url)
 
@@ -88,4 +90,12 @@ func sendRequestToAccrualSystem(ctx context.Context, address string, orderNumber
 	default:
 		return model.AccrualSystemResponce{}, fmt.Errorf("accrual status %d", resp.StatusCode())
 	}
+}
+
+func accrualOrderURL(address, orderNumber string) string {
+	address = strings.TrimRight(strings.TrimSpace(address), "/")
+	if !strings.HasPrefix(address, "http://") && !strings.HasPrefix(address, "https://") {
+		address = "http://" + address
+	}
+	return fmt.Sprintf("%s/api/orders/%s", address, orderNumber)
 }
