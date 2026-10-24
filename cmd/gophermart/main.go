@@ -59,7 +59,7 @@ func main() {
 	LoyaltyService := service.NewLoyaltyService(userRepo, ordersRepo, withdrawalRepo, cfg.AccrualSystemAddress)
 	h2 := handler.New(LoyaltyService)
 
-	ticker := time.NewTicker(61 * time.Second)
+	ticker := time.NewTicker(15 * time.Second)
 	defer ticker.Stop()
 	go workers.Run(ctx, LoyaltyService, cfg.AccrualSystemAddress, ticker)
 
