@@ -56,7 +56,7 @@ func main() {
 
 	ordersRepo := repository.NewOrderRepo(pool)
 	withdrawalRepo := repository.NewWithdrawalRepo(pool)
-	LoyaltyService := service.NewLoyaltyService(userRepo, ordersRepo, withdrawalRepo, cfg.AccrualSystemAddress)
+	LoyaltyService := service.NewLoyaltyService(userRepo, ordersRepo, withdrawalRepo)
 	h2 := handler.New(LoyaltyService)
 
 	ticker := time.NewTicker(5 * time.Second)

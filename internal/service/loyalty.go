@@ -16,6 +16,7 @@ var (
 	ErrInsufficientFunds  = errors.New("insufficient funds")
 )
 
+//go:generate mockgen -source=loyalty.go -destination=../mocks/mock_loyalty_repositories.go -package=mocks
 type OrderRepository interface {
 	// Save сохраняет заказ пользователя по данным системы расчёта начислений.
 	Save(ctx context.Context, res model.Order) error
@@ -39,18 +40,16 @@ type WithdrawalRepository interface {
 }
 
 type LoyaltyService struct {
-	userRepo             UserRepository
-	orderRepo            OrderRepository
-	withdrawalRepo       WithdrawalRepository
-	AccrualSystemAddress string
+	userRepo       UserRepository
+	orderRepo      OrderRepository
+	withdrawalRepo WithdrawalRepository
 }
 
-func NewLoyaltyService(userRepo UserRepository, orderRepo OrderRepository, withdrawalRepo WithdrawalRepository, accrualSystemAddress string) *LoyaltyService {
+func NewLoyaltyService(userRepo UserRepository, orderRepo OrderRepository, withdrawalRepo WithdrawalRepository) *LoyaltyService {
 	return &LoyaltyService{
-		userRepo:             userRepo,
-		orderRepo:            orderRepo,
-		withdrawalRepo:       withdrawalRepo,
-		AccrualSystemAddress: accrualSystemAddress,
+		userRepo:       userRepo,
+		orderRepo:      orderRepo,
+		withdrawalRepo: withdrawalRepo,
 	}
 }
 

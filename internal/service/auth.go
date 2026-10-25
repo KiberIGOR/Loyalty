@@ -19,6 +19,7 @@ var (
 	ErrInvalidCredentials = errors.New("invalid login or password")
 )
 
+//go:generate mockgen -source=auth.go -destination=../mocks/mock_user_repository.go -package=mocks
 type UserRepository interface {
 	//Create регистрация
 	Create(ctx context.Context, login, passwordHash string) (int, error)
